@@ -7,7 +7,7 @@ from mayavi import mlab
 
 
 
-mesh = pymesh.load_mesh("target.ply")
+mesh = pymesh.load_mesh("../PLY/target.ply")
 print(mesh.vertices)
 x=mesh.vertices[:,0]
 y=mesh.vertices[:,1]
