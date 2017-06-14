@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\lixx3527\Desktop\documents\computer vision\vison_with3Dmesh\VTK_reader\src\ReadPLY.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\lixx3527\Desktop\documents\computer vision\vison_with3Dmesh\VTK_reader\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{AA1BEBA3-4303-3AC0-B3D4-4B4054F6D245}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

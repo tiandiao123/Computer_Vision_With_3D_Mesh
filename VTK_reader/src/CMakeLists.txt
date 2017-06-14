@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
  
 PROJECT(ReadPLY)
- 
+
+set(VTK_DIR "C:/vtk/bin") 
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
  
