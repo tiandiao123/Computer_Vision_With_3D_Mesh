@@ -1,16 +1,34 @@
-import pymesh
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator
-import numpy as np
-from mayavi import mlab
-
-
-
-mesh = pymesh.load_mesh("../PLY/target.ply")
-print(mesh.vertices)
-x=mesh.vertices[:,0]
-y=mesh.vertices[:,1]
-z=mesh.vertices[:,2]
-s = mlab.mesh(x, y, z)
-mlab.show()
+import vtk
+ 
+filename = "../PLY/target.py"
+ 
+sphereSource = vtk.vtkSphereSource()
+sphereSource.Update()
+ 
+plyWriter = vtk.vtkPLYWriter()
+plyWriter.SetFileName(filename)
+plyWriter.SetInputConnection(sphereSource.GetOutputPort())
+plyWriter.Write()
+ 
+#Read and display for verication
+reader = vtk.vtkPLYReader()
+reader.SetFileName(filename)
+reader.Update()
+ 
+mapper = vtk.vtkPolyDataMapper()
+mapper.SetInputConnection(reader.GetOutputPort())
+ 
+actor = vtk.vtkActor()
+actor.SetMapper(mapper)
+ 
+renderer = vtk.vtkRenderer()
+renderWindow = vtk.vtkRenderWindow()
+renderWindow.AddRenderer(renderer)
+renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+renderWindowInteractor.SetRenderWindow(renderWindow)
+ 
+renderer.AddActor(actor)
+renderer.SetBackground(.3, .6, .3)   #Background color green
+ 
+renderWindow.Render()
+renderWindowInteractor.Start()
