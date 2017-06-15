@@ -9,4 +9,9 @@
 * [VTK](http://www.vtk.org/download/) library for handling mesh object
 * [mayavi](http://docs.enthought.com/mayavi/mayavi/) library for ploting mesh object
 
+### Optional:
+* [CMAKE](https://cmake.org/) for compiling and generating C++ files
+* [conda](https://conda.io/docs/intro.html) for installing VTK and mayavi more easily
+* [PyMesh](http://pymesh.readthedocs.io/en/latest/) for reading PLY file if you are not familiar with PLYFILE.  
+
 More details will be filled in!
