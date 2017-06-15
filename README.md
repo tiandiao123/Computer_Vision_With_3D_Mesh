@@ -13,5 +13,10 @@
 * [CMAKE](https://cmake.org/) for compiling and generating C++ files
 * [conda](https://conda.io/docs/intro.html) for installing VTK and mayavi more easily
 * [PyMesh](http://pymesh.readthedocs.io/en/latest/) for reading PLY file if you are not familiar with PLYFILE.  
+* Here are some easy command lines for installing VTK and mayavi in conda environment:
+```
+conda install -c anaconda vtk=6.3.0
+conda install -c anaconda mayavi=4.5.0
+```
 
 More details will be filled in!
