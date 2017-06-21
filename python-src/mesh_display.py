@@ -5,8 +5,8 @@ import Image
 
 im1 = Image.open("../texture.jpg")
 im2 = im1.rotate(90)
-im2.save("tmp/ortofoto90.jpg")
-bmp1 = tvtk.JPEGReader(file_name="tmp/ortofoto90.jpg")
+im2.save("../tmp/ortofoto90.jpg")
+bmp1 = tvtk.JPEGReader(file_name="../tmp/ortofoto90.jpg")
 
 my_texture=tvtk.Texture()
 my_texture.interpolate=0
