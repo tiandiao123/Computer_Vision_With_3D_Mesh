@@ -3,6 +3,7 @@
 ### Description of the Research Project:
 * construct a graphic platform for rendering 3D mesh using OpenGL, PyMesh, mlab, etc.
 * Texture 3D-Mesh Object using mayavi library and OPENGL
+* Sampled images' pixels, and appying texture mapping to all the 3D mesh model to make them become more realistic
 * Using Deep Learning to study target mesh location based on tag and large data sets of images
 
 ### Installation:
