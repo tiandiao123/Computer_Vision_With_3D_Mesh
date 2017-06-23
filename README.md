@@ -8,6 +8,7 @@
 
 ### Installation:
 * You need to install [PlyFile](https://github.com/dranjan/python-plyfile)
+* [OPENGL](https://www.opengl.org/) for C++ codes to run
 * [VTK](http://www.vtk.org/download/) library for handling mesh object
 * [mayavi](http://docs.enthought.com/mayavi/mayavi/) library for ploting mesh object
 
