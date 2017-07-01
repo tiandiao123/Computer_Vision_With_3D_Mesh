@@ -4,6 +4,7 @@
 * construct a graphic platform for rendering 3D mesh using OpenGL, PyMesh, mlab, etc.
 * Texture 3D-Mesh Object using mayavi library and OPENGL
 * Sampled images' pixels, and appying texture mapping to all the 3D mesh model to make them become more realistic
+* change views of 3D mesh in different ways, and collect data for training of the neural work
 * Using Deep Learning to study target mesh location based on tag and large data sets of images
 
 ### Installation:
