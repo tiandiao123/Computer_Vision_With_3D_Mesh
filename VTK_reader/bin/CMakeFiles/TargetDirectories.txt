@@ -1,3 +1,0 @@
-C:/Users/lixx3527/Desktop/documents/computer vision/vison_with3Dmesh/VTK_reader/bin/CMakeFiles/ReadPLY.dir
-C:/Users/lixx3527/Desktop/documents/computer vision/vison_with3Dmesh/VTK_reader/bin/CMakeFiles/ALL_BUILD.dir
-C:/Users/lixx3527/Desktop/documents/computer vision/vison_with3Dmesh/VTK_reader/bin/CMakeFiles/ZERO_CHECK.dir
