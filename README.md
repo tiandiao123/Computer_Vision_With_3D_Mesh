@@ -1,5 +1,8 @@
 ## Summer Research Project for Computer vision
 
+### Update Information:
+* currently working on using more automatical way to save views of 3D mesh object, and I will save all the extrinsic, intrinsic matrix and saved views in the saved_images folder!!!
+
 ### Description of the Research Project:
 * construct a graphic platform for rendering 3D mesh using OpenGL, PyMesh, mlab, etc.
 * Texture 3D-Mesh Object using mayavi library and OPENGL
