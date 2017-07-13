@@ -12,15 +12,10 @@
 * Using Deep Learning to study target mesh location based on tag and large data sets of images
 
 ### Installation:
-* You need to install [PlyFile](https://github.com/dranjan/python-plyfile)
 * [OPENGL](https://www.opengl.org/) for C++ codes to run
 * [VTK](http://www.vtk.org/download/) library for handling mesh object
 * [mayavi](http://docs.enthought.com/mayavi/mayavi/) library for ploting mesh object
 
-### Optional:
-* [CMAKE](https://cmake.org/) for compiling and generating C++ files
-* [conda](https://conda.io/docs/intro.html) for installing VTK and mayavi more easily
-* [PyMesh](http://pymesh.readthedocs.io/en/latest/) for reading PLY file if you are not familiar with PLYFILE.  
 * Here are some easy command lines for installing VTK and mayavi in conda environment:
 ```
 conda install -c anaconda vtk=6.3.0
