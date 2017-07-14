@@ -1,4 +1,4 @@
-## Summer Research Project for Computer vision
+## Summer Research Project for Computer Vision
 
 ### Update Information:
 * currently working on using more automatical way to save views of 3D mesh object, and I will save all the extrinsic matrices, intrinsic matrices and 3D mesh views in the saved_images folder!!! 
