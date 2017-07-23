@@ -28,7 +28,7 @@ constructed_image=np.array(constructed_image)
 blur = cv2.GaussianBlur(constructed_image,(7,7),0)
 dst = cv2.fastNlMeansDenoisingColored(blur,None,10,10,7,21)
 
-plt.imshow(blur)
-plt.show()
+#plt.imshow(blur)
+#plt.show()
 
-#scipy.misc.imsave('sampled_texture.jpg', blur)
+scipy.misc.imsave('sampled_texture.jpg', blur)
