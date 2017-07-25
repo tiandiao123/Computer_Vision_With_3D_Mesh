@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 class Polygon:
     def __init__(self, n_vertx, n_face, vertx, fcvertx, fcnorm, in_pnt):
@@ -31,7 +32,7 @@ class Polygon:
             prod = [np.inner(v_ti,np.cross(v_tri[j%3],v_tri[(j+1)%3])) for j in range(3)]
             if( ((prod[0] <= 0) & (prod[1] <= 0) & (prod[2] <= 0)) | ((prod[0] > 0) & (prod[1] > 0) & (prod[2] > 0)) ):
                 cnt = cnt + 1 
-                
+        print cnt
         #iff the number of the intersection points is even, the test_point is an inner point.
         if( (cnt%2) == 0 ):
             return True
@@ -60,61 +61,13 @@ p_inner = np.mean(p_tri,0) - np.array(fcnorm[0])
 
 #create a instance of class Polygon
 model = Polygon(n_vertx, n_face, vertx, fcvertx, fcnorm, p_inner)
+max_vertx = np.amax(vertx,axis = 0)
+min_vertx = np.amin(vertx,axis = 0)
+n_sample = [10,10,10]
+v_coor = [np.linspace(min_vertx[i],max_vertx[i],num = n_sample[i]) for i in range(3)]
+mat_coor = [i for i in itertools.product(v_coor[0],v_coor[1],v_coor[2])]
 
-
-model.detect(p_inner)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#UNFINISHED!!!
+mat_inner = []
+for pnt in mat_coor:
+    if( model.detect(pnt)):
+        mat_inner.append(pnt)
