@@ -27,6 +27,9 @@ camera_lights[2].activate = False
 
 # SAVE images and camera poses
 #calculate the intrinsic matrix
+poses = []
+focs = []
+extrinsic_matrices = []
 cam,foc=mlab.move()
 poses.append(cam)
 focs.append(foc)
@@ -34,6 +37,7 @@ focal_length=distance.euclidean(cam,foc)
 intrinsic_matrix=[[focal_length,0,surf.scene.get_size()[1]/2],[0,focal_length,surf.scene.get_size()[0]/2],[0,0,1]]
 
 #move camera and save images(unfinished)
+'''
 for i in range(50):
     #move camera by (10,0,0)
     mlab.move(10,0,0)
@@ -49,5 +53,14 @@ for i in range(50):
     
     #save the scene.
     surf.scene.save_png('saved_images/anim%d.png'%i)
-    
-#mlab.show()
+'''
+mlab.move(10,0,0)
+for i in range(100):
+    surf.scene.save_png('saved_images/animasoidjfoiaw.png')
+mlab.move(0,10,0)
+for i in range(100):
+    surf.scene.save_png('saved_images/animasoidjfoiaw.png')
+mlab.move(0,0,10)
+for i in range(100):
+    surf.scene.save_png('saved_images/animasoidjfoiaw.png')
+mlab.show()
