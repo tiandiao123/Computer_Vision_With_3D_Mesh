@@ -1,6 +1,13 @@
 import numpy as np
 import itertools
 import cudamat as cm
+from scipy.spatial import distance
+import codecs, json 
+from osgeo import gdal
+from tvtk.api import tvtk
+from mayavi import mlab
+import Image
+
 
 class Polygon:
     def __init__(self, n_vertx, n_face, vertx, fcvertx, fcnorm, in_pnt):
@@ -83,3 +90,50 @@ mat_inner = []
 for pnt in mat_coor:
     if( model.detect(pnt)):
         mat_inner.append(pnt)
+
+# test detection points:
+im1 = Image.open("sampled_texture.jpg")
+im2 = im1.rotate(90)
+im2.save("tmp/sampled_texture.jpg")
+bmp1 = tvtk.JPEGReader(file_name="tmp/sampled_texture.jpg")
+
+my_texture=tvtk.Texture()
+my_texture.interpolate=0
+my_texture=tvtk.Texture(input_connection=bmp1.output_port, interpolate=0)
+
+
+# surf=mlab.pipeline.surface(mlab.pipeline.open("PLY/ASR.ply"))
+surf=mlab.pipeline.surface(mat_inner)
+surf.actor.enable_texture = True
+surf.actor.tcoord_generator_mode = 'plane'
+surf.actor.actor.texture = my_texture
+
+poses=[]
+focs=[]
+extrinsic_matrices=[]
+
+cam1,foc1=mlab.move()
+poses.append(cam1)
+focs.append(foc1)
+focal_length=distance.euclidean(cam1,foc1)
+intrinsic_matrix=[[focal_length,0,surf.scene.get_size()[1]/2],[0,focal_length,surf.scene.get_size()[0]/2],[0,0,1]]
+
+
+poses=[]
+focs=[]
+extrinsic_matrices=[]
+# Make an animation:
+for i in range(36):
+    # change distance
+    delta = -i
+    mlab.view(80,120,60+delta)
+    #fig=mlab.figure(bgcolor=(1,1,1))
+    
+    cam1,foc1=mlab.move()
+    poses.append(cam1)
+    focs.append(foc1)
+    matrix=surf.scene.camera.view_transform_matrix.to_array().astype(np.float32)
+    extrinsic_matrices.append(matrix)
+    
+    # Save the scene.
+    surf.scene.save_png('test_images/anim%d.png'%i)
