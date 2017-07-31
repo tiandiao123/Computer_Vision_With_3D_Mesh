@@ -123,3 +123,21 @@ intrinsic_matrix=[[focal_length,0,surf.scene.get_size()[1]/2],[0,focal_length,su
 
 
 #Your code here:
+poses=[]
+focs=[]
+extrinsic_matrices=[]
+# Make an animation:
+for i in range(36):
+    # change distance
+    delta = -i
+    #mlab.view(80,120,60+delta)
+    mlab.view(mat_inner[i]);
+    
+    cam1,foc1=mlab.move()
+    poses.append(cam1)
+    focs.append(foc1)
+    matrix=surf.scene.camera.view_transform_matrix.to_array().astype(np.float32)
+    extrinsic_matrices.append(matrix)
+    
+    # Save the scene.
+    surf.scene.save_png('test_images/anim%d.png'%i)
