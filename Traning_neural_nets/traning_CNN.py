@@ -1,33 +1,47 @@
-# Currently working on neural network construction
+import time
+import tensorflow as tf
+import numpy as np
+import pandas as pd
+from scipy.misc import imread
+from alexnet import AlexNet
 
-from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+sign_names = pd.read_csv('signnames.csv')
+nb_classes = 43
 
-# a basic demo of CNN neural network
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Activation, Dropout, Flatten, Dense
+x = tf.placeholder(tf.float32, (None, 32, 32, 3))
+resized = tf.image.resize_images(x, (227, 227))
 
-model = Sequential()
-model.add(Conv2D(32, (3, 3), input_shape=(3, 150, 150)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+# Returns the second final layer of the AlexNet model,
+# this allows us to redo the last layer for the specifically for 
+# traffic signs model.
+fc7 = AlexNet(resized, feature_extract=True)
+shape = (fc7.get_shape().as_list()[-1], nb_classes)
+fc8W = tf.Variable(tf.truncated_normal(shape, stddev=1e-2))
+fc8b = tf.Variable(tf.zeros(nb_classes))
+logits = tf.nn.xw_plus_b(fc7, fc8W, fc8b)
+probs = tf.nn.softmax(logits)
 
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
 
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+# Read Images
+im1 = imread("construction.jpg").astype(np.float32)
+im1 = im1 - np.mean(im1)
 
+im2 = imread("stop.jpg").astype(np.float32)
+im2 = im2 - np.mean(im2)
 
-model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
-model.add(Dense(64))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(1))
-model.add(Activation('sigmoid'))
+# Run Inference
+t = time.time()
+output = sess.run(probs, feed_dict={x: [im1, im2]})
 
-model.compile(loss='binary_crossentropy',
-              optimizer='rmsprop',
-              metrics=['accuracy'])
+# Print Output
+for input_im_ind in range(output.shape[0]):
+    inds = np.argsort(output)[input_im_ind, :]
+    print("Image", input_im_ind)
+    for i in range(5):
+        print("%s: %.3f" % (sign_names.ix[inds[-1 - i]][1], output[input_im_ind, inds[-1 - i]]))
+    print()
+
+print("Time: %.3f seconds" % (time.time() - t))
