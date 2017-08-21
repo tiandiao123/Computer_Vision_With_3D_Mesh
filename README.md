@@ -12,7 +12,7 @@
 * Using Deep Learning to study target mesh location based on tag and large data sets of images
 
 ### Strurure of The Neural Network:
-* Firstly, please download the AlexNet pre-trained paramter using this [link](https://d17h27t6h515a5.cloudfront.net/topher/2016/October/580d880c_bvlc-alexnet/bvlc-alexnet.npy). 
+* Firstly, please download the AlexNet pre-trained parameter using this [link](https://d17h27t6h515a5.cloudfront.net/topher/2016/October/580d880c_bvlc-alexnet/bvlc-alexnet.npy). 
 * Then, we need to use AlexNet as our upper-layer neural network structure, and then Extend fully-connected neural network at the bottom to train our model. More details will be filled in. I implemented all the codes using tensorflow.  
 
 ### Installation:
