@@ -40,69 +40,89 @@ X_train,y_train=shuffle(images,labels)
 
 mean_u=0
 sigma=0.1
+learning_rate = 0.001
+batch_size = 2000
+training_epochs = 30
+dropout=0.80
+n_classes = 8
 
-#layer 1 whcihsaver = tf.train.Saver is 32*32*3 as input and 28*28*12 as output
-conv1_w=tf.Variable(tf.truncated_normal(shape=(5,5,3,12),mean=mean_u,stddev=sigma))
-conv1_b=tf.Variable(tf.zeros(12))
+#save_file = 'model_new.ckpt'
+from tensorflow.contrib.layers import flatten
+def NeuralNet(x):    
+    mu = 0
+    sigma = 0.1
+    # Layer 1: Convolutional. Input = 96x96x3. Output = 92x92x28x6.
+    newconv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 3, 6), mean = mu, stddev = sigma))
+    newconv1_b = tf.Variable(tf.zeros(6))
+    newconv1   = tf.nn.conv2d(x, newconv1_W, strides=[1, 1, 1, 1], padding='VALID') + newconv1_b
 
-#layer2 which is 14*14*12 as input, and the output is 10*10*16 as output
-conv2_w=tf.Variable(tf.truncated_normal(shape=(5,5,12,16),mean=mean_u,stddev=sigma))
-conv2_b=tf.Variable(tf.zeros(16))
+    # Activation.
+    newconv1 = tf.nn.relu(newconv1)
+    # Input = 92x92x6. Output = 80x80x12.
+    newconv2_W=tf.Variable(tf.truncated_normal(shape=(13,13,6,12),mean=mu,stddev=sigma))
+    newconv2_b=tf.Variable(tf.zeros(12))
+    newconv2=tf.nn.conv2d(newconv1,newconv2_W,strides=[1,1,1,1],padding='VALID')+newconv2_b    
+    # Pooling. Input = 80x80x12. Output = 40x40x12.
+    newconv2 = tf.nn.max_pool(newconv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
+    
+    # layer 2 : input 40x40x12, and output 36x36x16
+    newconv3_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 12, 16), mean = mu, stddev = sigma))
+    newconv3_b = tf.Variable(tf.zeros(16))
+    newconv3   = tf.nn.conv2d(newconv2, newconv3_W, strides=[1, 1, 1, 1], padding='VALID') + newconv3_b
+    
+    newconv3 = tf.nn.relu(newconv1)
+    # Pooling. Input = 36x36x16. Output = 18x18x16.
+    newconv3 = tf.nn.max_pool(newconv3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
-#layer 3:
-fun1_w=tf.Variable(tf.truncated_normal(shape=(400,120),mean=mean_u,stddev=sigma))
-fun1_b=tf.Variable(tf.zeros(120))
+    # Layer 4: Convolutional. Output = 14x14x18.
+    newconv4_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 16, 18), mean = mu, stddev = sigma))
+    newconv4_b = tf.Variable(tf.zeros(18))
+    newconv4   = tf.nn.conv2d(newconv3, newconv4_W, strides=[1, 1, 1, 1], padding='VALID') + newconv4_b
+    
+    # Activation.
+    newconv4 = tf.nn.relu(newconv4)
 
-    
-#layer 4
-fun2_w=tf.Variable(tf.truncated_normal(shape=(120,84),mean=mean_u,stddev=sigma))
-fun2_b=tf.Variable(tf.zeros(84))
+    # Pooling. Input = 14x14x18. Output = 7x7x18.
+    newconv4 = tf.nn.max_pool(newconv4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
-#layrer 5
-fun3_w=tf.Variable(tf.truncated_normal(shape=(84,43),mean=mean_u,stddev=sigma))
-fun3_b=tf.Variable(tf.zeros(43))
+    # Flatten. Input = 7x7x18. Output = 882.
+    newfc0 = flatten(newconv)
+    newfc0 = tf.nn.dropout(newfc0,dropout)
+    
+    # Layer 3: Fully Connected. Input = 882. Output = 400.
+    newfc1_W = tf.Variable(tf.truncated_normal(shape=(882, 400), mean = mu, stddev = sigma))
+    newfc1_b = tf.Variable(tf.zeros(120))
+    newfc1   = tf.matmul(newfc0, newfc1_W) + newfc1_b
+    
+    # Activation.
+    newfc1    = tf.nn.relu(newfc1)
+    #add dropout
+    newfc1=tf.nn.dropout(newfc1,dropout)
 
-def Neuralnets(X):
-    #layer 1 whcih is 32*32*3 as input and 28*28*12 as output
-    conv1=tf.nn.conv2d(X,conv1_w,strides=[1,1,1,1],padding='VALID')+conv1_b
+    # Layer 4: Fully Connected. Input = 400. Output = 84.
+    newfc2_W  = tf.Variable(tf.truncated_normal(shape=(400, 84), mean = mu, stddev = sigma))
+    newfc2_b  = tf.Variable(tf.zeros(84))
+    newfc2    = tf.matmul(newfc1, newfc2_W) + newfc2_b
     
-    #apply activation:
-    conv1=tf.nn.relu(conv1)
+    # Activation.
+    newfc2    = tf.nn.relu(newfc2)
+    #add dropout 
+    newfc2 = tf.nn.dropout(newfc2, dropout)
     
-    #apply max_pooling: output is 14*14*12
-    conv1=tf.nn.max_pool(conv1,ksize=[1,2,2,1],strides=[1,2,2,1],padding='VALID')
     
-    #layer2 which is 14*14*12 as input, and the output is 10*10*16 as output
-    conv2=tf.nn.conv2d(conv1,conv2_w,strides=[1,1,1,1],padding='VALID')+conv2_b
-    conv2=tf.nn.relu(conv2)
-    #apply max pooling and we get 5*5*16 output
-    conv2=tf.nn.max_pool(conv2,ksize=[1,2,2,1],strides=[1,2,2,1],padding='VALID')
+    # Layer 5: Fully Connected. Input = 84. Output = 43.
+    newfc3_W  = tf.Variable(tf.truncated_normal(shape=(84, 8), mean = mu, stddev = sigma))
+    newfc3_b  = tf.Variable(tf.zeros(8))
+    logits = tf.matmul(newfc2, newfc3_W) + newfc3_b
     
-    #flatten we get 400
-    fun0=flatten(conv2)
-    
-    #layer 3:
-    fun1=tf.matmul(fun0,fun1_w)+fun1_b
-    
-    #apply actiovation: output 120
-    fun1=tf.nn.relu(fun1)
-    
-    #layer 4
-    fun2=tf.matmul(fun1,fun2_w)+fun2_b
-    
-    #apply actiovation:
-    fun2=tf.nn.relu(fun2)
-    
-    logits=tf.matmul(fun2,fun3_w)+fun3_b
     return logits
 
 
-
 #construct functions for the neural nets
-x=tf.placeholder(tf.float32,(None,32,32,3))
+x=tf.placeholder(tf.float32,(None,96,96,3))
 y=tf.placeholder(tf.int32,(None))
-one_hot_y=tf.one_hot(y,3)
-logits=Neuralnets(x)
+one_hot_y=tf.one_hot(y,8)
+logits=NeuralNet(x)
 cross_entropy=tf.nn.softmax_cross_entropy_with_logits(logits,one_hot_y)
 loss_operation=tf.reduce_mean(cross_entropy)
 optimizer=tf.train.AdamOptimizer(learning_rate=learning_rate)
