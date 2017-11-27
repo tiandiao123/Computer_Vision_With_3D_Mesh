@@ -1,6 +1,8 @@
 import numpy as np
 import itertools
 import cudamat as cm
+import os
+
 
 class Polygon:
     def __init__(self, n_vertx, n_face, vertx, fcvertx, fcnorm, in_pnt):
@@ -74,7 +76,7 @@ model = Polygon(n_vertx, n_face, vertx, fcvertx, fcnorm, p_inner)
 #sample a number of prod(n_sample) points within the region of model
 max_vertx = np.amax(vertx,axis = 0)
 min_vertx = np.amin(vertx,axis = 0)
-n_sample = [10,10,5]
+n_sample = [20,20,10]
 v_coor = [np.linspace(min_vertx[i],max_vertx[i],num = n_sample[i]) for i in range(3)]
 mat_coor = [i for i in itertools.product(v_coor[0],v_coor[1],v_coor[2])]
 
@@ -83,3 +85,8 @@ mat_inner = []
 for pnt in mat_coor:
     if( model.detect(pnt)):
         mat_inner.append(pnt)
+
+with open('inpnt.txt', 'w') as file:
+    for item in mat_inner:
+        file.write(str(item))
+        file.write('\n')
