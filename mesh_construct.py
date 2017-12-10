@@ -1,24 +1,22 @@
 from tvtk.api import tvtk
 from mayavi import mlab
 import Image
-from scipy.spatial import distance
 import numpy as np
-import codecs, json 
-from matplotlib.colors import LightSource
-from mayavi.tools.engine_manager import get_engine
 
 def update_view(scene, fx, fy, fz, x, y, z, vx = 0, vy = 1, vz = 0):
-        """Set the view directly."""
-        camera = scene.camera
-        renderer = scene.renderer
-        camera.focal_point = fx, fy, fz
-        camera.position = x, y, z
-        camera.view_up = vx, vy, vz
-        scene.render()
+    """Set the view directly."""
+    camera = scene.camera
+    renderer = scene.renderer
+    camera.focal_point = fx, fy, fz
+    camera.position = x, y, z
+    camera.view_up = vx, vy, vz
+    scene.render()
 
-addition = [[0,0,1],[0,1,0],[1,0,0],[0.7071,0.7071,0],[0.7071,0,0.7071],[0,0.7071,0.7071],[0.57735,0.57735,0.57735]]
-
-
+def sphr2rgt(alpha = 0, beta = 0, gamma = 0):
+	x = np.cos(gamma)*np.cos(alpha)
+	y = np.cos(gamma)*np.sin(alpha)
+	z = np.sin(gamma)
+	return (x,y,z)
 
 # CONSTRUCT the 3D scene
 #construct surface mesh
@@ -56,57 +54,31 @@ surf.scene.background = (0,0,0)
 #calculate the intrinsic matrix
 poses = []
 focs = []
-extrinsic_matrices = []
-cam,foc=mlab.move()
-poses.append(cam)
-focs.append(foc)
-focal_length=distance.euclidean(cam,foc)
+focal_length= 1
 intrinsic_matrix=[[focal_length,0,surf.scene.get_size()[1]/2],[0,focal_length,surf.scene.get_size()[0]/2],[0,0,1]]
 
 #pnts = []
-
+labels_list = []
 cnt = 0
+n_samples = 32
 with open('inpnt.txt') as file:
     lines = file.readlines()
     for pos in lines:
         pos = pos.replace('(','')
         pos = pos.replace(')','')
         pos = [float(item) for item in pos.split(', ')]
-        #pnts.append(pos)
-        for add in addition:
-            for d_1 in range(2):
-                for d_2 in range(2):
-                    for d_3 in range(2):
-                        if( d_1 == 0 and d_2 == 0 and d_3 == 0):
-                            update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
-                            cnt = cnt+1
-                            surf.scene.save_png('dataset/'+str(cnt)+'.png')
-                        if( d_1 == 1 and add[0] != 0):
-                            add_0 = -add[0]
-                            update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
-                            cnt = cnt+1
-                            surf.scene.save_png('dataset/'+str(cnt)+'.png')
-                            continue
-                        if( d_2 == 1 and add[1] != 0):
-                            add_0 = -add[1]
-                            update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
-                            cnt = cnt+1
-                            surf.scene.save_png('dataset/'+str(cnt)+'.png')
-                            continue
-                        if( d_3 == 1 and add[2] != 0):
-                            add_0 = -add[2]
-                            update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
-                            cnt = cnt+1
-                            surf.scene.save_png('dataset/'+str(cnt)+'.png')
-                            continue
-
-
-
-#for i in range(10):
- #   mlab.move(0.2,0,0)
-#cam,foc=mlab.move()
-#mlab.orientation_axes()
-#cam,foc=mlab.move()
-#update_view(surf.scene, foc[0],foc[1],foc[2],cam[0], cam[1], cam[2])
-#update_view(surf.scene, 1,0,0,0,0,0)
-mlab.show(stop = True)
+                #pnts.append(pos)
+        for num in range(n_samples):
+            angles = np.random.sample((3,))
+            alpha = angles[0]*2*np.pi
+            beta = angles[1]*np.pi
+            gamma = angles[2]*2*np.pi
+            add = sphr2rgt(alpha, beta, gamma)
+            update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
+            mlab.move(forward=0, right=0, up=0)
+            cnt = cnt+1
+            mlab.savefig('dataset/'+str(cnt)+'.jpg',size=(320,320))
+            pos.extend(angles)
+            labels_list.append(pos)
+np.save('labels',labels_list)
+mlab.show()
