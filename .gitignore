@@ -1,0 +1,9 @@
+*.jpg
+data.tfrecord
+labels.npy
+*.png
+*.pyc
+*.zip
+trytry.py
+train.py
+/dataset/
