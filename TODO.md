@@ -5,7 +5,11 @@
 
 * Run mesh_construct.py to make raw dataset.
 
+<<<<<<< HEAD
 You can see images are splitted in 3 partitions: train (70%), valid(ation) (20%) and test (10%) that are in /dataset/train/, /dataset/valid/ and /dataset/test/ respectively. The labels are in .npy format in /dataset/.
+=======
+You can see images are splitted in 3 partitions: train (70%), valid(ation) (20%) and test (10%) that are in /dataset/train/, /dataset/valid/ and /dataset/test/ respectively. The labels are in .npy format in three folders as well.
+>>>>>>> 2238568eee187f2432008271267d559e06f16fd2
 
 * Run write_binary.py to make a Tfrecord format dataset.
 
@@ -21,7 +25,11 @@ Under construction...
 
 * unzip the dataset.zip in the root directory.
 
+<<<<<<< HEAD
 You can see images are splitted in 3 partitions: train (70%), valid(ation) (20%) and test (10%) that are in /dataset/train/, /dataset/valid/ and /dataset/test/ respectively. The labels are in .npy format in /dataset/.
+=======
+You can see images are splitted in 3 partitions: train (70%), valid(ation) (20%) and test (10%) that are in /dataset/train/, /dataset/valid/ and /dataset/test/ respectively. The labels are in .npy format in three folders as well.
+>>>>>>> 2238568eee187f2432008271267d559e06f16fd2
 
 * Run write_binary.py to make a Tfrecord format dataset.
 
@@ -30,4 +38,8 @@ You can see them in /dataset/ after running write_binary.py
 
 * Run train.py to train the neural network.
 
+<<<<<<< HEAD
 Under construction...
+=======
+Under construction...
+>>>>>>> 2238568eee187f2432008271267d559e06f16fd2
