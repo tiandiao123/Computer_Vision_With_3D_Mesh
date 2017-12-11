@@ -1,167 +1,207 @@
-import numpy as np
 import tensorflow as tf
+import numpy as np
 
-net_data = np.load("bvlc-alexnet.npy", encoding="latin1").item()
 
+class AlexNet(object):
+    """Implementation of the AlexNet."""
 
-def conv(input, kernel, biases, k_h, k_w, c_o, s_h, s_w,  padding="VALID", group=1):
-    '''
-    From https://github.com/ethereon/caffe-tensorflow
-    '''
-    c_i = input.get_shape()[-1]
-    assert c_i % group == 0
-    assert c_o % group == 0
-    convolve = lambda i, k: tf.nn.conv2d(i, k, [1, s_h, s_w, 1], padding=padding)
-
-    if tf.__version__ < "1.0.0":
-        if group == 1:
-            conv = convolve(input, kernel)
+    def __init__(self, x, keep_prob, skip_layer, dgr_frdm, regression = True, 
+        num_classes = 1, weights_path='DEFAULT'):
+        """Create the graph of the AlexNet model.
+        Args:
+            x: Placeholder for the input tensor.
+            keep_prob: Dropout probability.
+            num_classes: Number of classes in the dataset.
+            skip_layer: List of names of the layer, that get trained from
+                scratch
+            weights_path: Complete path to the pretrained weight file, if it
+                isn't in the same folder as this code
+        """
+        # Parse input arguments into class variables
+        self.X = x
+        self.NUM_CLASSES = num_classes
+        self.KEEP_PROB = keep_prob
+        self.SKIP_LAYER = skip_layer
+        self.DGR_FRDM = dgr_frdm
+        self.RGRS = regression
+        if weights_path == 'DEFAULT':
+            self.WEIGHTS_PATH = 'bvlc_alexnet.npy'
         else:
-            input_groups = tf.split(3, group, input)
-            kernel_groups = tf.split(3, group, kernel)
-            output_groups = [convolve(i, k) for i, k in zip(input_groups, kernel_groups)]
-            conv = tf.concat(3, output_groups)
+            self.WEIGHTS_PATH = weights_path
+
+        # Call the create function to build the computational graph of AlexNet
+        self.create(self.RGRS)
+
+    def create(self, regression = True):
+        """Create the network graph."""
+        # 1st Layer: Conv (w ReLu) -> Lrn -> Pool
+        conv1 = conv(self.X, 11, 11, 96, 4, 4, padding='VALID', name='conv1')
+        norm1 = lrn(conv1, 2, 1e-05, 0.75, name='norm1')
+        pool1 = max_pool(norm1, 3, 3, 2, 2, padding='VALID', name='pool1')
+        
+        # 2nd Layer: Conv (w ReLu)  -> Lrn -> Pool with 2 groups
+        conv2 = conv(pool1, 5, 5, 256, 1, 1, groups=2, name='conv2')
+        norm2 = lrn(conv2, 2, 1e-05, 0.75, name='norm2')
+        pool2 = max_pool(norm2, 3, 3, 2, 2, padding='VALID', name='pool2')
+        
+        # 3rd Layer: Conv (w ReLu)
+        conv3 = conv(pool2, 3, 3, 384, 1, 1, name='conv3')
+
+        # 4th Layer: Conv (w ReLu) splitted into two groups
+        conv4 = conv(conv3, 3, 3, 384, 1, 1, groups=2, name='conv4')
+
+        # 5th Layer: Conv (w ReLu) -> Pool splitted into two groups
+        conv5 = conv(conv4, 3, 3, 256, 1, 1, groups=2, name='conv5')
+        pool5 = max_pool(conv5, 3, 3, 2, 2, padding='VALID', name='pool5')
+
+        # 6th Layer: Flatten -> FC (w ReLu) -> Dropout
+        flattened = tf.reshape(pool5, [-1, 6*6*256])
+        fc6 = fc(flattened, 6*6*256, 4096, name='fc6')
+        dropout6 = dropout(fc6, self.KEEP_PROB)
+
+        # 7th Layer: FC (w ReLu) -> Dropout
+        fc7 = fc(dropout6, 4096, 4096, name='fc7')
+        dropout7 = dropout(fc7, self.KEEP_PROB)
+        
+        
+        if(regression):
+            self.output = fc(dropout7, 4096, self.DGR_FRDM, relu=False, name='fc8')
+        else:
+            # 8th Layer: FC and return unscaled activations
+            self.output = fc(dropout7, 4096, self.NUM_CLASSES, relu=False, name='fc8')
+
+    def load_initial_weights(self, session):
+        """Load weights from file into network.
+        As the weights from http://www.cs.toronto.edu/~guerzhoy/tf_alexnet/
+        come as a dict of lists (e.g. weights['conv1'] is a list) and not as
+        dict of dicts (e.g. weights['conv1'] is a dict with keys 'weights' &
+        'biases') we need a special load function
+        """
+        # Load the weights into memory
+        weights_dict = np.load(self.WEIGHTS_PATH, encoding='bytes').item()
+
+        # Loop over all layer names stored in the weights dict
+        for op_name in weights_dict:
+
+            # Check if layer should be trained from scratch
+            if op_name not in self.SKIP_LAYER:
+
+                with tf.variable_scope(op_name, reuse=True):
+
+                    # Assign weights/biases to their corresponding tf variable
+                    for data in weights_dict[op_name]:
+
+                        # Biases
+                        if len(data.shape) == 1:
+                            var = tf.get_variable('biases', trainable=False)
+                            session.run(var.assign(data))
+
+                        # Weights
+                        else:
+                            var = tf.get_variable('weights', trainable=False)
+                            session.run(var.assign(data))
+
+
+def conv(x, filter_height, filter_width, num_filters, stride_y, stride_x, name,
+         padding='SAME', groups=1):
+    """Create a convolution layer.
+    Adapted from: https://github.com/ethereon/caffe-tensorflow
+    """
+    # Get number of input channels
+    input_channels = int(x.get_shape()[-1])
+
+    # Create lambda function for the convolution
+    convolve = lambda i, k: tf.nn.conv2d(i, k,
+                                         strides=[1, stride_y, stride_x, 1],
+                                         padding=padding)
+
+    with tf.variable_scope(name) as scope:
+        # Create tf variables for the weights and biases of the conv layer
+        weights = tf.get_variable('weights', shape=[filter_height,
+                                                    filter_width,
+                                                    input_channels/groups,
+                                                    num_filters])
+        biases = tf.get_variable('biases', shape=[num_filters])
+
+    if groups == 1:
+        conv = convolve(x, weights)
+
+    # In the cases of multiple groups, split inputs & weights and
     else:
-        if group == 1:
-            conv = convolve(input, kernel)
-        else:
-            input_groups = tf.split(input, group, 3)
-            kernel_groups = tf.split(kernel, group, 3)
-            output_groups = [convolve(i, k) for i, k in zip(input_groups, kernel_groups)]
-            conv = tf.concat(output_groups, 3)
-    return tf.reshape(tf.nn.bias_add(conv, biases), [-1] + conv.get_shape().as_list()[1:])
+        # Split input and weights and convolve them separately
+        input_groups = tf.split(axis=3, num_or_size_splits=groups, value=x)
+        weight_groups = tf.split(axis=3, num_or_size_splits=groups,
+                                 value=weights)
+        output_groups = [convolve(i, k) for i, k in zip(input_groups, weight_groups)]
+
+        # Concat the convolved output together again
+        conv = tf.concat(axis=3, values=output_groups)
+
+    # Add biases
+    bias = tf.reshape(tf.nn.bias_add(conv, biases), tf.shape(conv))
+
+    # Apply relu function
+    relu = tf.nn.relu(bias, name=scope.name)
+
+    return relu
 
 
-def AlexNet(features, feature_extract=False):
-    """
-    Builds an AlexNet model, loads pretrained weights
-    """
-    # conv1
-    # conv(11, 11, 96, 4, 4, padding='VALID', name='conv1')
-    k_h = 11
-    k_w = 11
-    c_o = 96
-    s_h = 4
-    s_w = 4
-    conv1W = tf.Variable(net_data["conv1"][0])
-    conv1b = tf.Variable(net_data["conv1"][1])
-    conv1_in = conv(features, conv1W, conv1b, k_h, k_w, c_o, s_h, s_w, padding="SAME", group=1)
-    conv1 = tf.nn.relu(conv1_in)
+def fc(x, num_in, num_out, name, relu=True):
+    """Create a fully connected layer."""
+    with tf.variable_scope(name) as scope:
 
-    # lrn1
-    # lrn(2, 2e-05, 0.75, name='norm1')
-    radius = 2
-    alpha = 2e-05
-    beta = 0.75
-    bias = 1.0
-    lrn1 = tf.nn.local_response_normalization(conv1, depth_radius=radius, alpha=alpha, beta=beta, bias=bias)
+        # Create tf variables for the weights and biases
+        weights = tf.get_variable('weights', shape=[num_in, num_out],
+                                  trainable=True)
+        biases = tf.get_variable('biases', [num_out], trainable=True)
 
-    # maxpool1
-    # max_pool(3, 3, 2, 2, padding='VALID', name='pool1')
-    k_h = 3
-    k_w = 3
-    s_h = 2
-    s_w = 2
-    padding = 'VALID'
-    maxpool1 = tf.nn.max_pool(lrn1, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding)
 
-    # conv2
-    # conv(5, 5, 256, 1, 1, group=2, name='conv2')
-    k_h = 5
-    k_w = 5
-    c_o = 256
-    s_h = 1
-    s_w = 1
-    group = 2
-    conv2W = tf.Variable(net_data["conv2"][0])
-    conv2b = tf.Variable(net_data["conv2"][1])
-    conv2_in = conv(maxpool1, conv2W, conv2b, k_h, k_w, c_o, s_h, s_w, padding="SAME", group=group)
-    conv2 = tf.nn.relu(conv2_in)
+        #variable_summaries(weights)
+        #variable_summaries(biases)
+        # Matrix multiply weights and inputs and add bias
+        act = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
+        #tf.summary.histogram('linear', act)
 
-    # lrn2
-    # lrn(2, 2e-05, 0.75, name='norm2')
-    radius = 2
-    alpha = 2e-05
-    beta = 0.75
-    bias = 1.0
-    lrn2 = tf.nn.local_response_normalization(conv2, depth_radius=radius, alpha=alpha, beta=beta, bias=bias)
+    if relu:
+        # Apply ReLu non linearity
+        relu = tf.nn.relu(act)
+        #tf.summary.histogram('activations', relu)
+        return relu
+    else:
+        return act
 
-    # maxpool2
-    # max_pool(3, 3, 2, 2, padding='VALID', name='pool2')
-    k_h = 3
-    k_w = 3
-    s_h = 2
-    s_w = 2
-    padding = 'VALID'
-    maxpool2 = tf.nn.max_pool(lrn2, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding)
 
-    # conv3
-    # conv(3, 3, 384, 1, 1, name='conv3')
-    k_h = 3
-    k_w = 3
-    c_o = 384
-    s_h = 1
-    s_w = 1
-    group = 1
-    conv3W = tf.Variable(net_data["conv3"][0])
-    conv3b = tf.Variable(net_data["conv3"][1])
-    conv3_in = conv(maxpool2, conv3W, conv3b, k_h, k_w, c_o, s_h, s_w, padding="SAME", group=group)
-    conv3 = tf.nn.relu(conv3_in)
+def max_pool(x, filter_height, filter_width, stride_y, stride_x, name,
+             padding='SAME'):
+    """Create a max pooling layer."""
+    return tf.nn.max_pool(x, ksize=[1, filter_height, filter_width, 1],
+                          strides=[1, stride_y, stride_x, 1],
+                          padding=padding, name=name)
 
-    # conv4
-    # conv(3, 3, 384, 1, 1, group=2, name='conv4')
-    k_h = 3
-    k_w = 3
-    c_o = 384
-    s_h = 1
-    s_w = 1
-    group = 2
-    conv4W = tf.Variable(net_data["conv4"][0])
-    conv4b = tf.Variable(net_data["conv4"][1])
-    conv4_in = conv(conv3, conv4W, conv4b, k_h, k_w, c_o, s_h, s_w, padding="SAME", group=group)
-    conv4 = tf.nn.relu(conv4_in)
 
-    # conv5
-    # conv(3, 3, 256, 1, 1, group=2, name='conv5')
-    k_h = 3
-    k_w = 3
-    c_o = 256
-    s_h = 1
-    s_w = 1
-    group = 2
-    conv5W = tf.Variable(net_data["conv5"][0])
-    conv5b = tf.Variable(net_data["conv5"][1])
-    conv5_in = conv(conv4, conv5W, conv5b, k_h, k_w, c_o, s_h, s_w, padding="SAME", group=group)
-    conv5 = tf.nn.relu(conv5_in)
+def lrn(x, radius, alpha, beta, name, bias=1.0):
+    """Create a local response normalization layer."""
+    return tf.nn.local_response_normalization(x, depth_radius=radius,
+                                              alpha=alpha, beta=beta,
+                                              bias=bias, name=name)
 
-    # maxpool5
-    # max_pool(3, 3, 2, 2, padding='VALID', name='pool5')
-    k_h = 3
-    k_w = 3
-    s_h = 2
-    s_w = 2
-    padding = 'VALID'
-    maxpool5 = tf.nn.max_pool(conv5, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding)
 
-    # fc6, 4096
-    fc6W = tf.Variable(net_data["fc6"][0])
-    fc6b = tf.Variable(net_data["fc6"][1])
-    flat5 = tf.reshape(maxpool5, [-1, int(np.prod(maxpool5.get_shape()[1:]))])
-    fc6 = tf.nn.relu(tf.matmul(flat5, fc6W) + fc6b)
+def dropout(x, keep_prob):
+    """Create a dropout layer."""
+    return tf.nn.dropout(x, keep_prob)
 
-    # fc7, 4096
-    fc7W = tf.Variable(net_data["fc7"][0])
-    fc7b = tf.Variable(net_data["fc7"][1])
-    fc7 = tf.nn.relu(tf.matmul(fc6, fc7W) + fc7b)
+def variable_summaries(var):
+    """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+    with tf.name_scope('summaries'):
 
-    if feature_extract:
-        return fc7
+      mean = tf.reduce_mean(var)
+      tf.summary.scalar('mean', mean)
 
-    # fc8, 1000
-    fc8W = tf.Variable(net_data["fc8"][0])
-    fc8b = tf.Variable(net_data["fc8"][1])
+      with tf.name_scope('stddev'):
+        stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
 
-    logits = tf.matmul(fc7, fc8W) + fc8b
-    probabilities = tf.nn.softmax(logits)
 
-    return probabilities
+      tf.summary.scalar('stddev', stddev)
+      tf.summary.scalar('max', tf.reduce_max(var))
+      tf.summary.scalar('min', tf.reduce_min(var))
+      tf.summary.histogram('histogram', var)

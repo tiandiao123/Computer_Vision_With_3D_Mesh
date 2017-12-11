@@ -2,13 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-def write_binary():
+def write_binary(img_path, label_path, tfrecord_path, tfrecord_name):
     cwd = os.getcwd()
     ind = 0
     
-    labels = np.load('labels.npy')
-    writer = tf.python_io.TFRecordWriter("data.tfrecord")
-    data_path = cwd + "/dataset/"
+    labels = np.load(label_path)
+    writer = tf.python_io.TFRecordWriter(tfrecord_path+tfrecord_name+'.tfrecord')
+    data_path = cwd + img_path
     for img_name in os.listdir(data_path):
         img_path = data_path + img_name
         img = Image.open(img_path)
@@ -23,4 +23,6 @@ def write_binary():
         writer.write(example.SerializeToString())
     writer.close()
 
-write_binary()
+nn_word = ['train','valid','test']
+for word in nn_word:
+    write_binary('dataset/'+word+'/', 'dataset/'+word+'/labels.npy', 'dataset/', word)

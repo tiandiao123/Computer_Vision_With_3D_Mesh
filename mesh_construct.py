@@ -3,6 +3,10 @@ from mayavi import mlab
 import Image
 import numpy as np
 
+train_prob = .7
+valid_prob = .2
+
+
 def update_view(scene, fx, fy, fz, x, y, z, vx = 0, vy = 1, vz = 0):
     """Set the view directly."""
     camera = scene.camera
@@ -58,7 +62,9 @@ focal_length= 1
 intrinsic_matrix=[[focal_length,0,surf.scene.get_size()[1]/2],[0,focal_length,surf.scene.get_size()[0]/2],[0,0,1]]
 
 #pnts = []
-labels_list = []
+labels_train = []
+labels_valid = []
+labels_test = []
 cnt = 0
 n_samples = 32
 with open('inpnt.txt') as file:
@@ -67,18 +73,27 @@ with open('inpnt.txt') as file:
         pos = pos.replace('(','')
         pos = pos.replace(')','')
         pos = [float(item) for item in pos.split(', ')]
-                #pnts.append(pos)
         for num in range(n_samples):
-            angles = np.random.sample((3,))
-            alpha = angles[0]*2*np.pi
-            beta = angles[1]*np.pi
-            gamma = angles[2]*2*np.pi
+            alpha = np.random.rand()*2*np.pi
+            beta = np.random.rand()*np.pi
+            gamma = np.random.rand()*2*np.pi
             add = sphr2rgt(alpha, beta, gamma)
+            angles = [alpha/2/np.pi, beta/np.pi, gamma/2/np.pi]
             update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
             mlab.move(forward=0, right=0, up=0)
+            t_pos = pos + angles
+            rnd = np.random.rand()
+            if(rnd < train_prob):
+                mlab.savefig('dataset/train/'+str(cnt)+'.jpg',size=(320,320))
+                labels_train.append(t_pos)
+            elif(rnd < valid_prob+train_prob):
+                mlab.savefig('dataset/valid/'+str(cnt)+'.jpg',size=(320,320))
+                labels_valid.append(t_pos)
+            else:
+                mlab.savefig('dataset/test/'+str(cnt)+'.jpg',size=(320,320))
+                labels_test.append(t_pos)
             cnt = cnt+1
-            mlab.savefig('dataset/'+str(cnt)+'.jpg',size=(320,320))
-            pos.extend(angles)
-            labels_list.append(pos)
-np.save('labels',labels_list)
+np.save('dataset/train/labels',labels_train)
+np.save('dataset/valid/labels',labels_valid)
+np.save('dataset/test/labels',labels_test)
 mlab.show()

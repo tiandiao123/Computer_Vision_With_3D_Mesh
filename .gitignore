@@ -1,9 +1,11 @@
 *.jpg
 data.tfrecord
 labels.npy
+bvlc_alexnet.npy
 *.png
 *.pyc
 *.zip
 trytry.py
 train.py
 /dataset/
+/log/
