@@ -93,7 +93,7 @@ with open('inpnt.txt') as file:
                 mlab.savefig('dataset/test/'+str(cnt)+'.jpg',size=(320,320))
                 labels_test.append(t_pos)
             cnt = cnt+1
-np.save('dataset/train/labels',labels_train)
-np.save('dataset/valid/labels',labels_valid)
-np.save('dataset/test/labels',labels_test)
+np.save('dataset/train_labels',labels_train)
+np.save('dataset/valid_labels',labels_valid)
+np.save('dataset/test_labels',labels_test)
 mlab.show()

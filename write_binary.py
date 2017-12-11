@@ -6,9 +6,10 @@ def write_binary(img_path, label_path, tfrecord_path, tfrecord_name):
     cwd = os.getcwd()
     ind = 0
     
-    labels = np.load(label_path)
-    writer = tf.python_io.TFRecordWriter(tfrecord_path+tfrecord_name+'.tfrecord')
+    writer = tf.python_io.TFRecordWriter(cwd+tfrecord_path+tfrecord_name+'.tfrecord')
     data_path = cwd + img_path
+    label_path = cwd + label_path
+    labels = np.load(label_path)
     for img_name in os.listdir(data_path):
         img_path = data_path + img_name
         img = Image.open(img_path)
@@ -25,4 +26,4 @@ def write_binary(img_path, label_path, tfrecord_path, tfrecord_name):
 
 nn_word = ['train','valid','test']
 for word in nn_word:
-    write_binary('dataset/'+word+'/', 'dataset/'+word+'/labels.npy', 'dataset/', word)
+    write_binary('/dataset/'+word+'/', '/dataset/'+word+'_labels.npy', '/dataset/', word)
