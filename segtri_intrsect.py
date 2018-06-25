@@ -1,6 +1,6 @@
 import numpy as np
 import itertools
-#import cudamat as cm
+import cudamat as cm
 import os
 import sys
 
