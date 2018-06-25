@@ -1,13 +1,13 @@
 from tvtk.api import tvtk
 from mayavi import mlab
-import Image
+from PIL import Image
 import numpy as np
 
 train_prob = .7
 valid_prob = .2
 
 
-def update_view(scene, fx, fy, fz, x, y, z, vx = 0, vy = 1, vz = 0):
+def update_view(scene, fx, fy, fz, x, y, z, vx = 0, vy = 0, vz = 1):
     """Set the view directly."""
     camera = scene.camera
     renderer = scene.renderer
@@ -24,6 +24,7 @@ def sphr2rgt(alpha = 0, beta = 0, gamma = 0):
 
 # CONSTRUCT the 3D scene
 #construct surface mesh
+#mlab.options.offscreen = True
 warp = mlab.pipeline.warp_scalar(mlab.pipeline.open("PLY/ASR.ply"), warp_scale=0)
 normals = mlab.pipeline.poly_data_normals(warp)
 normals.filter.feature_angle = 90
@@ -66,7 +67,7 @@ labels_train = []
 labels_valid = []
 labels_test = []
 cnt = 0
-n_samples = 32
+n_samples = 5
 with open('inpnt.txt') as file:
     lines = file.readlines()
     for pos in lines:
@@ -79,21 +80,29 @@ with open('inpnt.txt') as file:
             gamma = np.random.rand()*2*np.pi
             add = sphr2rgt(alpha, beta, gamma)
             angles = [alpha/2/np.pi, beta/np.pi, gamma/2/np.pi]
-            update_view(surf.scene,pos[0]-add[0],pos[1]-add[1],pos[2]-add[2],pos[0],pos[1],pos[2])
+            update_view(surf.scene,pos[0]+add[0]+15,pos[1]+add[1]-20,pos[2]+add[2]+15,pos[0]+15,pos[1]-100,pos[2]+15)
+	    camera_lights[0].source.focal_point = pos[0]+add[0]+15, pos[1]-20, pos[2]+add[2]+5
+	    camera_lights[0].source.position = pos[0]+15, pos[1]-50, pos[2]+15
+	    print add
+#	    camera_lights[0].source.light_type = 'camera_light'
             mlab.move(forward=0, right=0, up=0)
             t_pos = pos + angles
             rnd = np.random.rand()
             if(rnd < train_prob):
-                mlab.savefig('dataset/train/'+str(cnt)+'.jpg',size=(320,320))
+#                mlab.savefig('dataset/train/'+str(cnt)+'.jpg',size=(320,320))
                 labels_train.append(t_pos)
             elif(rnd < valid_prob+train_prob):
-                mlab.savefig('dataset/valid/'+str(cnt)+'.jpg',size=(320,320))
+#                mlab.savefig('dataset/valid/'+str(cnt)+'.jpg',size=(320,320))
                 labels_valid.append(t_pos)
             else:
-                mlab.savefig('dataset/test/'+str(cnt)+'.jpg',size=(320,320))
+#                mlab.savefig('dataset/test/'+str(cnt)+'.jpg',size=(320,320))
                 labels_test.append(t_pos)
             cnt = cnt+1
-np.save('dataset/train_labels',labels_train)
-np.save('dataset/valid_labels',labels_valid)
-np.save('dataset/test_labels',labels_test)
+	    raw_input("Press Enter to continue...");
+	    cam,foc = mlab.move()
+#	    print cam
+#	    print foc
+#np.save('dataset/train_labels',labels_train)
+#np.save('dataset/valid_labels',labels_valid)
+#np.save('dataset/test_labels',labels_test)
 mlab.show()
