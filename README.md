@@ -23,15 +23,6 @@ conda install -c anaconda mayavi=4.5.0
 ```
 ### Testing:
 * For running C++ files, please check this [website](http://www.vtk.org/Wiki/VTK/Examples/Cxx) to change VTK path to run C++ files since it depends which location your VTK is in.
-* For those are not familiar with CMAKE and VTK, I recommend that you can stick to Python codes. 
+* For those are not familiar with CMAKE and VTK, I recommend that you can stick to Python codes.
 
 More details will be filled in!
-
-------------------------------------------------------------------------------------------------------------------------------
-
-## NEW README 
-
-### Instalation:
-* pip install PyOpenGL PyOpenGL_accelerate
-* pip install meshrender
-* maybe uninstall these...?
